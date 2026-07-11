@@ -51,6 +51,10 @@ namespace WeiboAlbumDownloader
                 scope.SetTag("DeviceName", Environment.MachineName);
                 scope.SetTag("DeviceName", WeiboAlbumDownloader.MainWindow.currentVersion.ToString("#0.0"));
             });
+
+            var mainWindow = new MainWindow(e.Args);
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
 
     }

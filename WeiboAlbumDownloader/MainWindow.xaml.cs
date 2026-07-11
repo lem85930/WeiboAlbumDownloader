@@ -33,7 +33,7 @@ namespace WeiboAlbumDownloader
         //①此处升级一下GlobalVar版本号
         //②Github/Gitee release新建一个新版本Tag
         //③上传压缩包删除Settings.json以及uidList.txt
-        public static double currentVersion = 8.1;
+        public static double currentVersion = 8.2;
 
         /// <summary>
         /// com1是根据uid获取相册id，https://photo.weibo.com/albums/get_all?uid=10000000000&page=1；根据uid和相册id以及相册type获取图片列表，https://photo.weibo.com/photos/get_all?uid=10000000000&album_id=3959362334782071&page=1&type=3
@@ -51,6 +51,9 @@ namespace WeiboAlbumDownloader
         private int countDownloadedSkipToNextUser;
         private bool isDownloading;
         private CancellationTokenSource? cancellationTokenSource;
+        private readonly string[] _startupArgs;
+        private bool _autoStartHandled;
+
 
         private const int MaxSuggestionCount = 50;
         public ObservableCollection<string> FilteredDownloadFolderNames { get; set; } = new ObservableCollection<string>();
@@ -59,9 +62,11 @@ namespace WeiboAlbumDownloader
         public ObservableCollection<MessageModel> Messages { get; set; } = new ObservableCollection<MessageModel>();
         public ObservableCollection<string> DownloadFolderNames { get; set; } = new ObservableCollection<string>();
 
-        public MainWindow()
+        public MainWindow(string[]? startupArgs = null)
         {
+            _startupArgs = startupArgs ?? Array.Empty<string>();
             InitializeComponent();
+            Loaded += MainWindow_Loaded;
 
             _ = GetVersion();
             InitUidsData();
@@ -101,6 +106,35 @@ namespace WeiboAlbumDownloader
                     }
                 }, TaskCreationOptions.LongRunning);
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_autoStartHandled)
+            {
+                return;
+            }
+
+            _autoStartHandled = true;
+
+            if (_startupArgs.Length <= 0)
+            {
+                return;
+            }
+
+            var input = _startupArgs[0]?.Trim();
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return;
+            }
+
+            TextBox_WeiboId.Text = input;
+            TextBox_WeiboId.CaretIndex = TextBox_WeiboId.Text.Length;
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                StartDownLoad(null, null);
+            }));
         }
 
         private async Task GetVersion()
